@@ -4,12 +4,14 @@ var app = express();
 var path = require('path');
 var exec = require('child_process').exec;
 var execSync = require('child_process').execSync;
+var forceSSL = require('express-force-ssl');
 const https = require('https');
 
 
 app.set('port', (process.env.PORT || 80));
+app.use(forceSSL);
 app.use('/', express.static(__dirname + '/public'));
-
+app.use(require('helmet')());
 
 app.get('/SEND/', function(request, response) {
 	try{
@@ -22,7 +24,7 @@ app.get('/SEND/', function(request, response) {
         execSync("mkdir ./tmp/" + random_hexa);
  		fs.writeFileSync("./tmp/" + random_hexa + "/" + random_hexa + ".ino", code);
 
-		exec(`cd ${__dirname}/tmp/${random_hexa} ; make -f ../../makeEspArduino.mk all ESP_ROOT=/root/arduino-esp32/ CHIP=esp32 ; zip -r arduino-files.zip build`, function(err){
+		exec(`cd ${__dirname}/tmp/${random_hexa} ; make -f ../../makeEspArduino.mk all ESP_ROOT=/root/arduino-esp32/ CHIP=esp32`, function(err){
 			if(err){
 				console.error("ERROR EXEC \n\n",err);
 				console.error(random_hexa + " not working");
@@ -60,7 +62,3 @@ const options = {
 app.listen(80);
 https.createServer(options, app).listen(443);
 
-
-// app.listen(app.get('port'), function() {
-//   console.log('Node app is running on port', app.get('port'));
-// });

@@ -229,9 +229,10 @@ $(MAIN_EXE): $(CORE_LIB) $(USER_OBJ)
 ifneq ($(FLASH_INFO),)
 	printf "Flash size: $(FLASH_INFO)\n\n"
 endif
-	mv $(BUILD_DIR)/$(MAIN_NAME).bin $(SKETCH_DIR)/$(MAIN_NAME).bin
-	mv $(BUILD_DIR)/$(MAIN_NAME).elf $(SKETCH_DIR)/$(MAIN_NAME).elf
-	mv $(BUILD_DIR)/$(MAIN_NAME).partitions.bin $(SKETCH_DIR)/$(MAIN_NAME).partitions.bin
+	mkdir $(SKETCH_DIR)/build
+	mv $(BUILD_DIR)/$(MAIN_NAME).bin $(SKETCH_DIR)/build/$(MAIN_NAME).bin
+	mv $(BUILD_DIR)/$(MAIN_NAME).elf $(SKETCH_DIR)/build/$(MAIN_NAME).elf
+	mv $(BUILD_DIR)/$(MAIN_NAME).partitions.bin $(SKETCH_DIR)/build/$(MAIN_NAME).partitions.bin
 	rm $(BUILD_DIR)/$(MAIN_NAME)_.cpp.d
 	rm $(BUILD_DIR)/$(MAIN_NAME)_.cpp.o
 	perl -e 'print "Build complete. Elapsed time: ", time()-$(START_TIME),  " seconds\n\n"'
