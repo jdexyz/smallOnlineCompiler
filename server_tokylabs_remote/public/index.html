@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Tokylabs demo !!</title>
+  <script src="js/acorn_interpreter.js"></script>
+  <script src="js/blockly_compressed.js"></script>
+  <script src="js/blocks_compressed.js"></script>
+  <script src="js/javascript_compressed.js"></script>
+  <script src="js/arduino_compressed_modified.js"></script>
+  <script src="js/en.js"></script>
+  <script src="js/custom_blocks.js"></script>
+  <script type="text/javascript" src="js/FileSaver.min.js"></script>
+  <script type="text/javascript" src="js/jquery.min.js"></script>
+  <link   href="css/index.css"   rel="stylesheet">
+  <link   href="font-awesome/css/font-awesome.min.css"   rel="stylesheet">
+  <style>
+    body {
+      background-color: #fff;
+      font-family: sans-serif;
+    }
+    h1 {
+      font-weight: normal;
+      font-size: 140%;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="header">
+    <a href="https://www.tokylabs.com"><img id="logo" src="TokyLabs_logo.svg"></a>
+    <div>
+    <span class="btn" onclick="connectBluetooth()" id="pairBluetooth">
+          <i class="fa fa-bluetooth-b" aria-hidden="true"></i>
+    </span>
+    <span class="btn" onclick="runCode()" id="runButton">
+          
+          <i class="fa fa-play" aria-hidden="true"></i>
+    </span>
+    <span class="btn" onclick="discard()" >
+          <i class="fa fa-times" aria-hidden="true"></i>
+    </span>
+    <span class="btn" onclick="save()" >
+          <i class="fa fa-floppy-o" aria-hidden="true"></i>
+    </span>
+    <span class="btn" id="fakeload">
+          <i class="fa fa-folder-open-o" aria-hidden="true"></i>
+    </span>
+    <span class="btn" onclick="upload()">
+          <i class="fa fa-upload" aria-hidden="true"></i>
+    </span>
+    </div>
+<!--     <button onclick="runCode()" id="runButton">Run JavaScript</button>
+    <button onclick="connectBluetooth()" id="pairBluetooth">Pair Bluetooth</button>
+    <button onclick="discard()">Discard</button>
+    <button onclick="saveCode()">Save Arduino Code</button>
+    <button onclick="save()">Save XML</button>
+    <button id="fakeload">Load XML</button> -->
+    <input type="file" id="load" style="display: none;"/>
+  </div>
+
+  <div id="status">
+    
+  </div>
+
+  <table>
+    <tr>
+      <td>
+      </td>
+    </tr>
+    <tr>
+      <td id="blocklyArea">
+      </td>
+    </tr>
+  </table>
+
+    <div id="blocklyDiv" ></div>
+
+      <textarea id="output" disabled="disabled"></textarea>
+
+
+  <xml id="toolbox" style="display: none">
+    <category name="Logic">
+      <block type="controls_if"></block>
+      <block type="logic_compare"></block>
+      <block type="logic_operation"></block>
+      <block type="logic_negate"></block>
+      <block type="logic_boolean"></block>
+    </category>
+    <category name="Loops">
+      <block type="controls_repeat_ext">
+        <value name="TIMES">
+          <block type="math_number">
+            <field name="NUM">10</field>
+          </block>
+        </value>
+      </block>
+      <block type="controls_whileUntil"></block>
+    </category>
+    <category name="Math">
+      <block type="math_number"></block>
+      <block type="math_arithmetic"></block>
+      <block type="math_single"></block>
+    </category>
+    <category name="Text">
+      <block type="text"></block>
+      <block type="text_length"></block>
+      <block type="text_print"></block>
+      <block type="text_prompt_ext">
+        <value name="TEXT">
+          <block type="text"></block>
+        </value>
+      </block>
+    </category>
+    <category name="Variables" custom="VARIABLE"></category>
+    <category name="Functions" custom="PROCEDURE"></category>
+    <category name="IO" >
+      <block type="output_PWM"></block>
+      <block type="output_digital"></block>
+      <block type="bl_input_sensor"></block>
+      <block type="wait_seconds"></block>
+    </category>
+  </xml>
+
+  <xml id="startBlocks" style="display: none">
+
+<!-- 
+                <block type="console_log">
+                  <field name="INPUT">4</field>
+                </block>   -->
+    <block type="variables_set" id="set_n_initial" inline="true" x="20" y="20">
+      <field name="VAR">n</field>
+      <value name="VALUE">
+        <block type="math_number">
+          <field name="NUM">1</field>
+        </block>
+      </value>
+      <next>
+        <block type="controls_repeat_ext" id="repeat" inline="true">
+          <value name="TIMES">
+           <!--  <block type="math_number">
+              <field name="NUM">4</field>
+            </block> -->
+                <block type="bl_input_sensor">
+                  <field name="FROM">4</field>
+                </block>  
+          </value>
+          <statement name="DO">
+            <block type="wait_seconds" id="wait">
+              <field name="SECONDS">1.0</field>
+              <next>
+                <block type="variables_set" id="set_n_update" inline="true">
+                  <field name="VAR">n</field>
+                  <value name="VALUE">
+                    <block type="math_arithmetic" inline="true">
+                      <field name="OP">MULTIPLY</field>
+                      <value name="A">
+                        <block type="variables_get">
+                          <field name="VAR">n</field>
+                        </block>
+                      </value>
+                      <value name="B">
+                        <block type="math_number">
+                          <field name="NUM">2</field>
+                        </block>
+                      </value>
+                    </block>
+                  </value>
+                  <next>
+                    <block type="text_print" id="print" inline="false">
+                      <value name="TEXT">
+                        <block type="variables_get">
+                          <field name="VAR">n</field>
+                        </block>
+                      </value>
+                    </block>
+                  </next>
+                </block>
+              </next>
+            </block>
+            <block type="output_PWM" id="pwm">
+              <field name="OUTPUT_PIN">1</field>
+              <field name="OUTPUT_DUTY_CYCLE">09</field>
+            </block>
+
+          </statement>
+        </block>
+      </next>
+    </block>
+  </xml>
+
+  <script>
+
+    function connectBluetooth(){
+    navigator.bluetooth.requestDevice({
+      filters: [{
+        services: [238] // 0x00EE 
+      }]
+    })
+    .then(device => {
+      console.log('> Found ' + device.name);
+      console.log('Connecting to GATT Server...');
+      return device.gatt.connect();
+    })
+    .then(server => server.getPrimaryService(238))
+    .then(service=> service.getCharacteristics())
+    .then(characteristics => {
+      window.bluetoothCaracteristic = characteristics[0];
+      console.log("Connected to the sweeeet ESP32");
+      $("#pairBluetooth i").css("color", "#3ab2c7");
+    });
+  }
+
+  window.librariesToAdd = "";
+  // .        :       ...    :::::::-.  :::.-:::::'.-:.     ::-..        :  .,::::::
+  // ;;,.    ;;;   .;;;;;;;.  ;;,   `';,;;;;;;''''  ';;.   ;;;;';;,.    ;;; ;;;;''''
+  // [[[[, ,[[[[, ,[[     \[[,`[[     [[[[[[[[,,==    '[[,[[['  [[[[, ,[[[[, [[cccc
+  // $$$$$$$$"$$$ $$$,     $$$ $$,    $$$$$`$$$"``      c$$"    $$$$$$$$"$$$ $$""""
+  // 888 Y88" 888o"888,_ _,88P 888_,o8P'888 888       ,8P"`     888 Y88" 888o888oo,__
+  // MMM  M'  "MMM  "YMMMMMP"  MMMMP"`  MMM "MM,     mM"        MMM  M'  "MMM""""YUMMM
+
+
+
+  var blocklyArea = document.getElementById('blocklyArea');
+  var blocklyDiv = document.getElementById('blocklyDiv');
+
+    var workspace = Blockly.inject(blocklyDiv,
+        {
+          media: 'media/',
+          toolbox: document.getElementById('toolbox'),
+          zoom:
+             {controls: true,
+            //  wheel: true,
+              startScale: 1.0,
+              maxScale: 3,
+              minScale: 0.3,
+              scaleSpeed: 1.2},
+          trashcan: true
+        }
+       );
+
+  var onresize = function(e) {
+    // Compute the absolute coordinates and dimensions of blocklyArea.
+    var element = blocklyArea;
+    var x = 0;
+    var y = 0;
+    do {
+      x += element.offsetLeft;
+      y += element.offsetTop;
+      element = element.offsetParent;
+    } while (element);
+    // Position blocklyDiv over blocklyArea.
+    blocklyDiv.style.left = x + 'px';
+    blocklyDiv.style.top = y + 'px';
+    blocklyDiv.style.width = blocklyArea.offsetWidth + 'px';
+    blocklyDiv.style.height = blocklyArea.offsetHeight + 'px';
+    Blockly.svgResize(workspace);
+
+  };
+
+  window.addEventListener('resize', onresize, false);
+
+
+
+  onresize();
+  Blockly.svgResize(workspace);
+
+    //Blockly.Xml.domToWorkspace(document.getElementById('startBlocks'),workspace);
+
+    // Exit is used to signal the end of a script.
+    Blockly.JavaScript.addReservedWords('exit');
+
+    var outputArea = document.getElementById('output');
+    var runButton = document.getElementById('runButton');
+    var myInterpreter = null;
+    var runner;
+
+    function initApi(interpreter, scope) {
+      // Add an API function for the alert() block, generated for "text_print" blocks.
+      var wrapper = function(text) {
+        text = text ? text.toString() : text===0 ? "0" : '';
+        outputArea.value = outputArea.value + '\n' + text;
+        outputArea.scrollTop = outputArea.scrollHeight;
+      };
+      interpreter.setProperty(scope, 'alert',
+          interpreter.createNativeFunction(wrapper));
+
+      // Add an API function for the prompt() block.
+      var wrapper = function(text) {
+        text = text ? text.toString() : '';
+        return interpreter.createPrimitive(prompt(text));
+      };
+      interpreter.setProperty(scope, 'prompt',
+          interpreter.createNativeFunction(wrapper));
+
+      // Add an API for the wait block.  See wait_block.js
+      initInterpreterWaitForSeconds(interpreter, scope);
+      initInterpreterSetOutputPWM(interpreter, scope);
+      initInterpreterSetOutputDigital(interpreter, scope);
+      initInterpreterGetBLSensorValue(interpreter, scope);
+      //   .,-:::::   :::.      :::      :::       .        :  .,::::::
+      // ,;;;'````'   ;;`;;     ;;;      ;;;       ;;,.    ;;; ;;;;''''
+      // [[[         ,[[ '[[,   [[[      [[[       [[[[, ,[[[[, [[cccc
+      // $$$        c$$$cc$$$c  $$'      $$'       $$$$$$$$"$$$ $$""""
+      // `88bo,__,o, 888   888,o88oo,.__o88oo,.__  888 Y88" 888o888oo,__
+      //   "YUMMMMMP"YMM   ""` """"YUMMM""""YUMMM  MMM  M'  "MMM""""YUMMM
+
+
+      // Add an API function for highlighting blocks.
+      var wrapper = function(id) {
+        id = id ? id.toString() : '';
+        return interpreter.createPrimitive(highlightBlock(id));
+      };
+      interpreter.setProperty(scope, 'highlightBlock',
+          interpreter.createNativeFunction(wrapper));
+    }
+
+    var highlightPause = false;
+    var latestCode = '';
+
+    function highlightBlock(id) {
+      workspace.highlightBlock(id);
+      highlightPause = true;
+    }
+
+    function resetStepUi(clearOutput) {
+      workspace.highlightBlock(null);
+      highlightPause = false;
+      runButton.disabled = '';
+
+      if (clearOutput) {
+        outputArea.value = `Console`
+      }
+    }
+
+    function generateCodeAndLoadIntoInterpreter() {
+      // Generate JavaScript code and parse it.
+      Blockly.JavaScript.STATEMENT_PREFIX = 'highlightBlock(%1);\n';
+      Blockly.JavaScript.addReservedWords('highlightBlock');
+      latestCode = Blockly.JavaScript.workspaceToCode(workspace);
+
+      resetStepUi(true);
+    }
+
+    function resetInterpreter() {
+      myInterpreter = null;
+      if (runner) {
+        clearTimeout(runner);
+        runner = null;
+      }
+    }
+
+    function runCode() {
+      if (!myInterpreter) {
+        // First statement of this code.
+        // Clear the program output.
+        resetStepUi(true);
+        runButton.disabled = 'disabled';
+
+        // And then show generated code in an alert.
+        // In a timeout to allow the outputArea.value to reset first.
+        setTimeout(function() {
+          alert('Ready to execute the following code\n' +
+            '===================================\n' +
+            latestCode);
+
+          // Begin execution
+          highlightPause = false;
+          myInterpreter = new Interpreter(latestCode, initApi);
+          runner = function() {
+            if (myInterpreter) {
+              var hasMore = myInterpreter.run();
+              if (hasMore) {
+                // Execution is currently blocked by some async call.
+                // Try again later.
+                setTimeout(runner, 10);
+              } else {
+                // Program is complete.
+                outputArea.value += '\n\n<< Program complete >>';
+                resetInterpreter();
+                resetStepUi(false);
+              }
+            }
+          };
+          runner();
+        }, 1);
+        return;
+      }
+    }
+
+    // Load the interpreter now, and upon future changes.
+    generateCodeAndLoadIntoInterpreter();
+    workspace.addChangeListener(function(event) {
+      if (!(event instanceof Blockly.Events.Ui)) {
+        // Something changed. Parser needs to be reloaded.
+        resetInterpreter();
+        generateCodeAndLoadIntoInterpreter();
+      }
+    });
+
+
+/**
+ * Backup code blocks to localStorage.
+ */
+function backup_blocks() {
+  if ('localStorage' in window) {
+    var xml = Blockly.Xml.workspaceToDom(Blockly.mainWorkspace);
+    window.localStorage.setItem('arduino', Blockly.Xml.domToText(xml));
+  }
+}
+
+/**
+ * Restore code blocks from localStorage.
+ */
+function restore_blocks() {
+  if ('localStorage' in window && window.localStorage.arduino) {
+    var xml = Blockly.Xml.textToDom(window.localStorage.arduino);
+    Blockly.Xml.domToWorkspace(Blockly.mainWorkspace, xml);
+  }
+}
+
+/**
+* Save Arduino generated code to local file.
+*/
+function saveCode() {
+  var fileName = window.prompt('What would you like to name your file?', 'BlocklyDuino')
+  //doesn't save if the user quits the save prompt
+  if(fileName){
+    var blob = new Blob([Blockly.JavaScript.workspaceToCode()], {type: 'text/plain;charset=utf-8'});
+    saveAs(blob, fileName + '.js');
+  }
+}
+
+/**
+ * Save blocks to local file.
+ * better include Blob and FileSaver for browser compatibility
+ */
+function save() {
+  var xml = Blockly.Xml.workspaceToDom(Blockly.mainWorkspace);
+  var data = Blockly.Xml.domToText(xml);
+  var fileName = window.prompt('What would you like to name your file?', 'BlocklyDuino');
+  // Store data in blob.
+  // var builder = new BlobBuilder();
+  // builder.append(data);
+  // saveAs(builder.getBlob('text/plain;charset=utf-8'), 'blockduino.xml');
+  if(fileName){
+    var blob = new Blob([data], {type: 'text/xml'});
+    saveAs(blob, fileName + ".xml");
+  } 
+}
+
+/**
+ * Load blocks from local file.
+ */
+function load(event) {
+  var files = event.target.files;
+  // Only allow uploading one file.
+  if (files.length != 1) {
+    return;
+  }
+
+  // FileReader
+  var reader = new FileReader();
+  reader.onloadend = function(event) {
+    var target = event.target;
+    // 2 == FileReader.DONE
+    if (target.readyState == 2) {
+      try {
+        var xml = Blockly.Xml.textToDom(target.result);
+      } catch (e) {
+        alert('Error parsing XML:\n' + e);
+        return;
+      }
+      var count = Blockly.mainWorkspace.getAllBlocks().length;
+      if (count && confirm('Replace existing blocks?\n"Cancel" will merge.')) {
+        Blockly.mainWorkspace.clear();
+      }
+      Blockly.Xml.domToWorkspace(Blockly.mainWorkspace, xml);
+    }
+    // Reset value of input after loading because Chrome will not fire
+    // a 'change' event if the same file is loaded again.
+    document.getElementById('load').value = '';
+  };
+  reader.readAsText(files[0]);
+}
+
+/**
+ * Discard all blocks from the workspace.
+ */
+function discard() {
+  var count = Blockly.mainWorkspace.getAllBlocks().length;
+  if (count < 2 || window.confirm('Delete all ' + count + ' blocks?')) {
+    Blockly.mainWorkspace.clear();
+    renderContent();
+  }
+}
+
+/*
+ * auto save and restore blocks
+ */
+function auto_save_and_restore_blocks() {
+  // Restore saved blocks in a separate thread so that subsequent
+  // initialization is not affected from a failed load.
+  window.setTimeout(restore_blocks, 0);
+  // Hook a save function onto unload.
+  bindEvent(window, 'unload', backup_blocks);
+  //tabClick(selected);
+
+  // Init load event.
+  var loadInput = document.getElementById('load');
+  loadInput.addEventListener('change', load, false);
+  document.getElementById('fakeload').onclick = function() {
+    loadInput.click();
+  };
+}
+
+/**
+ * Bind an event to a function call.
+ * @param {!Element} element Element upon which to listen.
+ * @param {string} name Event name to listen to (e.g. 'mousedown').
+ * @param {!Function} func Function to call when event is triggered.
+ *     W3 browsers will call the function with the event object as a parameter,
+ *     MSIE will not.
+ */
+function bindEvent(element, name, func) {
+  if (element.addEventListener) {  // W3C
+    element.addEventListener(name, func, false);
+  } else if (element.attachEvent) {  // IE
+    element.attachEvent('on' + name, func);
+  }
+}
+
+
+  function sendNextDataBatch(resolve, reject) {
+    // Can only write 512 bytes at a time to the characteristic
+    // Need to send the image data in 512 byte batches
+    window.startTime = Date.now();
+    if (index + 512 < data.length) {
+      window.theGoodCharacteristic.writeValue(data.slice(index, index + 512)).then(() => {
+        index += 512;
+        console.log("Data Transfer Progress : " + Math.floor(index*1000.0/window.dataToSend.length)/10.0 + "%");
+        document.getElementById('status').innerHTML = 
+          'Sending Data : ' 
+          + Math.floor(index*1000.0/window.dataToSend.length)/10.0 + "%\n" 
+          + "Remaining Time : "
+          + ((Date.now() - window.startTime)/1000.0)/(index*1.0/window.dataToSend.length)
+          + "s";
+        sendNextDataBatch(resolve, reject);
+      })
+      .catch(error => reject(error));
+    } else {
+      // Send the last bytes
+      if (index < data.length) {
+        window.theGoodCharacteristic.writeValue(data.slice(index, data.length)).then(() => {
+          resolve();
+        })
+        .catch(error => reject(error));
+      } else {
+        resolve();
+      }
+    }
+  }
+
+
+  function upload(){
+    var code = Blockly.Arduino.workspaceToCode(workspace);
+    console.log("code",code);
+    $("#status").show().html('Compiling');
+    $.get(
+    "/SEND/",
+    {code : code},
+    function(hexa){
+        console.log("Id of compiled code " + hexa);
+        console.log("Now downloading the binary...");
+        $("#status").html('Downloading');
+        var oReq = new XMLHttpRequest();
+        oReq.open("GET", "/GET/"+hexa, true);
+        oReq.responseType = "arraybuffer";
+
+        oReq.onload = function(oEvent) {
+          var arrayBuffer = oReq.response;
+          console.log(arrayBuffer);
+          window.dataToSend = new Uint8Array(arrayBuffer);
+          console.log("Downloaded Data Length : ", window.dataToSend.length);
+          console.log("(Accessible at window.dataToSend)");
+          $("#status").html('Binary downloaded, click here to send via BLE').click(sendToBluetoothDevice);
+        };
+        oReq.send();                        
+        }
+    );
+  }
+
+function sendToBluetoothDevice() {
+  navigator.bluetooth.requestDevice({
+      filters: [{
+        services: [238] // 0x00EE 
+      }]
+    })
+    .then(device => {
+      console.log('> Found ' + device.name);
+      console.log('Connecting to GATT Server...');
+      return device.gatt.connect();
+    })
+    .then(server => server.getPrimaryService(238))
+    .then(service => service.getCharacteristics())
+    .then(characteristics => {
+        index = 0;
+        // let encoder = new TextEncoder("utf-8");
+        // data = encoder.encode(window.dataToSend + '\u000A\u000D');
+        data = window.dataToSend;
+        window.theGoodCharacteristic = characteristics[0];
+        console.log('Sending the data');
+        $("#status").html('Sending Data');
+        return new Promise(function(resolve, reject) {
+          sendNextDataBatch(resolve, reject);
+        });
+    })
+    .then(()=>{
+      console.log("Data miraculously sent"); 
+      //window.timeStop = new Date();
+    })
+    .catch(err=>console.error(err));
+}
+
+
+auto_save_and_restore_blocks();
+
+
+  </script>
+</body>
+</html>
