@@ -1,0 +1,16 @@
+{
+  "name": "server_tokylabs_remote",
+  "version": "1.0.0",
+  "description": "- just `node index.js &` or `nodejs index.js &` in linux",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.15.4",
+    "express-force-ssl": "^0.3.2",
+    "helmet": "^3.8.1"
+  }
+}
